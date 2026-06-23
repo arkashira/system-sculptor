@@ -1,63 +1,93 @@
-import json
+import time
 from dataclasses import dataclass
 from typing import List, Dict
 
-@dataclass
-class Node:
-    id: str
+
+@dataclass(frozen=True)
+class Pattern:
+    """A recommended architectural pattern."""
     name: str
+    justification: str
+    relevance_score: float
 
-@dataclass
-class Diagram:
-    nodes: List[Node]
-    edges: List[Dict[str, str]]
 
-class SystemSculptor:
-    def __init__(self):
-        self.project_session = {}
+def _validate_scan_data(scan_data: Dict) -> None:
+    """Validate that required metric keys are present and have sensible types."""
+    if not isinstance(scan_data, dict):
+        raise TypeError("scan_data must be a dict")
+    required = {"module_size", "coupling"}
+    missing = required - scan_data.keys()
+    if missing:
+        raise ValueError(f"Missing required metric(s): {', '.join(sorted(missing))}")
+    if not isinstance(scan_data["module_size"], (int, float)):
+        raise TypeError("module_size must be a number")
+    if not isinstance(scan_data["coupling"], (int, float)):
+        raise TypeError("coupling must be a number")
 
-    def load_diagram(self, mermaid_source: str) -> Diagram:
-        # Simplified Mermaid source parsing for demonstration purposes
-        nodes = []
-        edges = []
-        for line in mermaid_source.splitlines():
-            if line.startswith("node"):
-                node_id, node_name = line.split()[1], line.split()[2]
-                nodes.append(Node(node_id, node_name))
-            elif line.startswith("edge"):
-                edge_from, edge_to = line.split()[1], line.split()[2]
-                edges.append({"from": edge_from, "to": edge_to})
-        return Diagram(nodes, edges)
 
-    def add_node(self, diagram: Diagram, node_id: str, node_name: str) -> Diagram:
-        diagram.nodes.append(Node(node_id, node_name))
-        return diagram
+def recommend_patterns(scan_data: Dict) -> List[Pattern]:
+    """
+    Recommend micro‑service patterns based on simple code metrics.
 
-    def remove_node(self, diagram: Diagram, node_id: str) -> Diagram:
-        diagram.nodes = [node for node in diagram.nodes if node.id != node_id]
-        diagram.edges = [edge for edge in diagram.edges if edge["from"] != node_id and edge["to"] != node_id]
-        return diagram
+    Parameters
+    ----------
+    scan_data: dict
+        Must contain:
+        - ``module_size`` (int/float): lines of code in the module.
+        - ``coupling`` (int/float): number of external dependencies.
 
-    def rename_node(self, diagram: Diagram, node_id: str, new_name: str) -> Diagram:
-        for node in diagram.nodes:
-            if node.id == node_id:
-                node.name = new_name
-                break
-        return diagram
+    Returns
+    -------
+    List[Pattern]
+        Patterns with relevance_score > 0.7, sorted descending by relevance.
+    """
+    start = time.perf_counter()
+    _validate_scan_data(scan_data)
 
-    def save_diagram(self, diagram: Diagram) -> None:
-        self.project_session["diagram"] = {
-            "nodes": [{"id": node.id, "name": node.name} for node in diagram.nodes],
-            "edges": [{"from": edge["from"], "to": edge["to"]} for edge in diagram.edges]
-        }
+    size = float(scan_data["module_size"])
+    coupling = float(scan_data["coupling"])
 
-    def export_diagram(self) -> str:
-        diagram = self.project_session.get("diagram")
-        if diagram:
-            mermaid_source = ""
-            for node in diagram["nodes"]:
-                mermaid_source += f"node {node['id']} {node['name']}\n"
-            for edge in diagram["edges"]:
-                mermaid_source += f"edge {edge['from']} {edge['to']}\n"
-            return mermaid_source
-        return ""
+    patterns: List[Pattern] = []
+
+    # Pattern 1: Service Decomposition (triggered by large module size)
+    if size > 500:
+        relevance = min(1.0, size / 1000)  # 500 -> 0.5, 800 -> 0.8, etc.
+        if relevance > 0.7:
+            justification = (
+                f"Module size {int(size)} lines suggests splitting the monolith "
+                f"into smaller, independently deployable services."
+            )
+            patterns.append(
+                Pattern(
+                    name="Service Decomposition",
+                    justification=justification,
+                    relevance_score=relevance,
+                )
+            )
+
+    # Pattern 2: API Gateway (triggered by high coupling)
+    if coupling > 10:
+        relevance = min(1.0, coupling / 20)  # 10 -> 0.5, 15 -> 0.75, etc.
+        if relevance > 0.7:
+            justification = (
+                f"Coupling count {int(coupling)} indicates many external calls; "
+                f"an API Gateway can centralise routing and concerns."
+            )
+            patterns.append(
+                Pattern(
+                    name="API Gateway",
+                    justification=justification,
+                    relevance_score=relevance,
+                )
+            )
+
+    # Sort by relevance descending
+    patterns.sort(key=lambda p: p.relevance_score, reverse=True)
+
+    # Ensure we respect the 2‑second response guarantee (no artificial delay)
+    elapsed = time.perf_counter() - start
+    if elapsed > 2.0:
+        # In a real system we might log a warning; here we simply raise.
+        raise RuntimeError("Recommendation engine exceeded time budget")
+
+    return patterns
