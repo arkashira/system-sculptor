@@ -1,0 +1,33 @@
+# user-stories.md  
+
+## Epic 1 – Architecture Discovery & Visualization  
+
+| # | User Story (Connextra) | Acceptance Criteria | Complexity |
+|---|------------------------|---------------------|------------|
+| 1 | **As a developer, I want to import my codebase (Git repo, monorepo, or multi‑repo) into System‑Sculptor, so that I can instantly see a high‑level component diagram.** | - System‑Sculptor accepts a Git URL or local path and clones/reads it securely.<br>- Generates a component graph (services, modules, libraries) within 2 minutes for ≤ 500 k LOC.<br>- Diagram is interactive (zoom, pan, click‑through to source file).<br>- Supports major languages: Java, Python, Go, TypeScript/JS.<br>- Shows version‑control metadata (last commit, author) on each node. | **M** |
+| 2 | **As an architect, I want to view dependency heat‑maps (tight‑coupling, circular deps) across the system, so that I can spot architectural bottlenecks.** | - Heat‑map overlays on the component diagram with color‑scale (green = low coupling, red = high).<br>- Detects and lists all circular dependencies with affected files.<br>- Provides a “filter by depth” slider (1‑5 levels).<br>- Exports the heat‑map as PNG/SVG.<br>- Updates in real‑time when the repo is refreshed. | **M** |
+| 3 | **As a team lead, I want to compare two architecture snapshots (e.g., before/after a PR), so that I can assess impact of changes on system structure.** | - Allows selection of two commits/tags and renders side‑by‑side diagrams.<br>- Highlights added, removed, and modified components/edges.<br>- Generates a diff report summarizing changes (e.g., “+3 services, –2 circular deps”).<br>- Provides a PDF export of the comparison.<br>- Supports automated comparison via CLI for CI pipelines. | **L** |
+
+## Epic 2 – Quality Metrics & Technical Debt Analysis  
+
+| # | User Story (Connextra) | Acceptance Criteria | Complexity |
+|---|------------------------|---------------------|------------|
+| 4 | **As a developer, I want System‑Sculptor to calculate maintainability metrics (e.g., Cyclomatic Complexity, Coupling‑Cohesion, Layer Violation), so that I can quantify technical debt.** | - Computes standard metrics per module/service.<br>- Shows aggregate scores (e.g., Maintainability Index) on a dashboard.<br>- Flags modules that exceed configurable thresholds.<br>- Provides drill‑down to offending lines of code.<br>- Stores metric history for trend analysis. | **M** |
+| 5 | **As a product manager, I want a “Technical Debt Radar” view that ranks the top 5 risk areas, so that I can prioritize remediation work.** | - Radar chart displays categories: Complexity, Duplication, Test Coverage, Dependency Risk, Documentation Gap.<br>- Each axis shows current score and target threshold.<br>- Clicking a quadrant opens a list of concrete issues (e.g., “Service X: Cyclomatic Complexity = 28”).<br>- Allows export to CSV for backlog import.<br>- Updates nightly on the main branch. | **S** |
+| 6 | **As a security engineer, I want the tool to surface architectural anti‑patterns that increase attack surface (e.g., “God Service”, “Shared Database”), so that I can harden the system.** | - Detects predefined anti‑patterns using rule‑engine.<br>- Provides severity rating (Low/Med/High).<br>- Links each finding to remediation guidance.<br>- Generates a security‑focused report (PDF/HTML).<br>- Integrates with OWASP Top 10 mapping. | **M** |
+
+## Epic 3 – Refactoring Recommendations & Automated Guidance  
+
+| # | User Story (Connextra) | Acceptance Criteria | Complexity |
+|---|------------------------|---------------------|------------|
+| 7 | **As a developer, I want actionable refactoring suggestions (e.g., extract module, introduce interface), so that I can improve maintainability with minimal effort.** | - For each flagged issue, suggests a concrete refactor (e.g., “Extract `PaymentProcessor` into its own service”).<br>- Provides a step‑by‑step guide with code snippets.<br>- Estimates effort in person‑hours (based on size).<br>- Allows acceptance/rejection of each suggestion.<br>- Stores decisions in a “refactor backlog”. | **L** |
+| 8 | **As a DevOps engineer, I want System‑Sculptor to generate CI‑compatible linting/analysis jobs, so that architecture checks run automatically on each PR.** | - Emits a YAML snippet for GitHub Actions, GitLab CI, and Azure Pipelines.<br>- Fails the job if new violations exceed a configurable threshold.<br>- Posts a comment on the PR with a summary of findings.<br>- Supports incremental analysis (only changed files).<br>- Provides a badge for “Architecture Health”. | **M** |
+| 9 | **As a developer, I want an “auto‑fix” mode that applies safe refactorings (e.g., rename duplicate functions) via PR, so that I can quickly reduce debt.** | - Generates a pull request with code changes for low‑risk fixes.<br>- Includes a description linking back to the originating issue.<br>- Runs unit tests before creating the PR and aborts on failures.<br>- Allows user to review & merge manually.<br>- Logs all auto‑fix actions for audit. | **L** |
+
+## Epic 4 – Integration & Collaboration  
+
+| # | User Story (Connextra) | Acceptance Criteria | Complexity |
+|---|------------------------|---------------------|------------|
+| 10 | **As a team member, I want to embed architecture diagrams into Confluence/Notion via an embed link, so that stakeholders can view up‑to‑date visuals without leaving their docs.** | - Generates a public, read‑only embed URL with token‑based access control.<br>- Supports iframe embed code for major wiki platforms.<br>- Diagram updates automatically when the repo changes.<br>- Provides version selector in the embed UI.<br>- Logs embed view counts for analytics. | **S** |
+| 11 | **As a CTO, I want a dashboard that aggregates architecture health across all of our micro‑service repos, so that I can monitor portfolio‑wide scalability.** | - Connects to multiple repos (up to 50) and shows a tiled view per repo.<br>- Displays key KPIs: Avg. Coupling, Service Count, Debt Ratio.<br>- Allows drill‑down to individual repo details.<br>- Sends weekly email summary with trend arrows.<br>- Supports role‑based access (view vs. edit). | **M** |
+| 12 | **As a developer, I want a VS Code extension that surfaces System‑Sculptor insights inline (e.g., “high coupling” gutter icon), so that I can act while coding.** | - Extension installs via VS Code Marketplace.<br>- Shows gutter icons on lines/files flagged by analysis.<br>- Hover tooltip displays issue summary and a “quick‑fix” button.<br>- Syncs with local analysis cache (updates on save).<br>- Works offline after initial data pull. | **M** |
